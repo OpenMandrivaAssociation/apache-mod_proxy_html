@@ -1,4 +1,4 @@
-%define snap r90
+%define snap r93
 
 #Module-Specific definitions
 %define mod_name mod_proxy_html
