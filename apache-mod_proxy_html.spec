@@ -1,4 +1,4 @@
-%define snap r93
+%define snap r95
 
 #Module-Specific definitions
 %define mod_name mod_proxy_html
@@ -83,6 +83,6 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
-%doc config.html guide.html faq.html README proxy_html.conf
+%doc config.html guide.html faq.html proxy_html.conf
 %attr(0644,root,root) %config(noreplace) %{_sysconfdir}/httpd/modules.d/%{mod_conf}
 %attr(0755,root,root) %{_libdir}/apache-extramodules/%{mod_so}
