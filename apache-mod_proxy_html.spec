@@ -5,7 +5,7 @@
 %define mod_conf A28_%{mod_name}.conf
 %define mod_so %{mod_name}.so
 
-Summary:	Mod_proxy_html is a DSO module for the apache web server
+Summary:	DSO module for the apache web server
 Name:		apache-%{mod_name}
 Version:	3.0
 Release:	%mkrel 0.%{snap}.1
