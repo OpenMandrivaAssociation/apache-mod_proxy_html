@@ -8,7 +8,7 @@
 Summary:	DSO module for the apache web server
 Name:		apache-%{mod_name}
 Version:	3.0
-Release:	%mkrel 0.%{snap}.2
+Release:	%mkrel 0.%{snap}.3
 Group:		System/Servers
 License:	GPL
 URL:		http://apache.webthing.com/mod_proxy_html/
