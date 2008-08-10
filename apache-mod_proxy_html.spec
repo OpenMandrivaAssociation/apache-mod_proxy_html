@@ -1,4 +1,4 @@
-%define snap r122
+%define snap r123
 
 #Module-Specific definitions
 %define mod_name mod_proxy_html
@@ -7,8 +7,8 @@
 
 Summary:	DSO module for the apache web server
 Name:		apache-%{mod_name}
-Version:	3.0
-Release:	%mkrel 0.%{snap}.6
+Version:	3.0.1
+Release:	%mkrel 0.%{snap}.1
 Group:		System/Servers
 License:	GPL
 URL:		http://apache.webthing.com/mod_proxy_html/
