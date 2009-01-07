@@ -17,6 +17,7 @@ Source1:	http://apache.webthing.com/mod_proxy_html/config.html
 Source2:	http://apache.webthing.com/mod_proxy_html/guide.html
 Source3:	http://apache.webthing.com/mod_proxy_html/faq.html
 Source4:	%{mod_conf}
+Patch0:		mod_proxy_html-format_not_a_string_literal_and_no_format_arguments.diff
 BuildRequires:	libxml2-devel
 Requires(pre): rpm-helper
 Requires(postun): rpm-helper
@@ -39,6 +40,7 @@ essential component of a reverse proxy.
 %prep
 
 %setup -q -n %{mod_name}
+%patch0 -p0
 
 cp %{SOURCE1} .
 cp %{SOURCE2} .
@@ -55,7 +57,7 @@ find . -type f|xargs file|grep 'text'|cut -d: -f1|xargs perl -p -i -e 's/\r//'
 head -36 mod_proxy_html.c > README.mod_proxy_html
 
 %build
-%{_sbindir}/apxs `xml2-config --libs` `xml2-config --cflags` -c %{mod_name}.c
+%{_sbindir}/apxs `xml2-config --cflags` `xml2-config --libs` %{ldflags} -c %{mod_name}.c
 
 %install
 rm -rf %{buildroot}
