@@ -8,7 +8,7 @@
 Summary:	DSO module for the apache web server
 Name:		apache-%{mod_name}
 Version:	3.0.1
-Release:	%mkrel 0.%{snap}.4
+Release:	%mkrel 0.%{snap}.5
 Group:		System/Servers
 License:	GPL
 URL:		http://apache.webthing.com/mod_proxy_html/
@@ -24,9 +24,11 @@ Requires(postun): rpm-helper
 Requires(pre):	apache-conf >= 2.2.0
 Requires(pre):	apache >= 2.2.0
 Requires(pre):	apache-mod_proxy >= 2.2.0
+Requires(pre):	apache-mod_ssl >= 2.2.0
 Requires:	apache-conf >= 2.2.0
 Requires:	apache >= 2.2.0
 Requires:	apache-mod_proxy >= 2.2.0
+Requires:	apache-mod_ssl >= 2.2.0
 BuildRequires:	apache-devel >= 2.2.0
 BuildRequires:	file
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
