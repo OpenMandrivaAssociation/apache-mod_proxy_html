@@ -1,4 +1,4 @@
-%define snap r123
+%define snap r142
 
 #Module-Specific definitions
 %define mod_name mod_proxy_html
@@ -7,8 +7,8 @@
 
 Summary:	DSO module for the apache web server
 Name:		apache-%{mod_name}
-Version:	3.0.1
-Release:	%mkrel 0.%{snap}.5
+Version:	3.1.2
+Release:	%mkrel 0.%{snap}.1
 Group:		System/Servers
 License:	GPL
 URL:		http://apache.webthing.com/mod_proxy_html/
@@ -17,7 +17,6 @@ Source1:	http://apache.webthing.com/mod_proxy_html/config.html
 Source2:	http://apache.webthing.com/mod_proxy_html/guide.html
 Source3:	http://apache.webthing.com/mod_proxy_html/faq.html
 Source4:	%{mod_conf}
-Patch0:		mod_proxy_html-format_not_a_string_literal_and_no_format_arguments.diff
 BuildRequires:	libxml2-devel
 Requires(pre): rpm-helper
 Requires(postun): rpm-helper
@@ -25,11 +24,14 @@ Requires(pre):	apache-conf >= 2.2.0
 Requires(pre):	apache >= 2.2.0
 Requires(pre):	apache-mod_proxy >= 2.2.0
 Requires(pre):	apache-mod_ssl >= 2.2.0
+Requires(pre):	apache-mod_xml2enc >= 1.0.3
 Requires:	apache-conf >= 2.2.0
 Requires:	apache >= 2.2.0
 Requires:	apache-mod_proxy >= 2.2.0
 Requires:	apache-mod_ssl >= 2.2.0
+Requires:	apache-mod_xml2enc >= 1.0.3
 BuildRequires:	apache-devel >= 2.2.0
+Requires:	apache-mod_xml2enc-devel >= 1.0.3
 BuildRequires:	file
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
@@ -42,7 +44,6 @@ essential component of a reverse proxy.
 %prep
 
 %setup -q -n %{mod_name}
-%patch0 -p0
 
 cp %{SOURCE1} .
 cp %{SOURCE2} .
