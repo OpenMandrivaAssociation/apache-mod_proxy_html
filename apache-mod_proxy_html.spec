@@ -31,7 +31,7 @@ Requires:	apache-mod_proxy >= 2.2.0
 Requires:	apache-mod_ssl >= 2.2.0
 Requires:	apache-mod_xml2enc >= 1.0.3
 BuildRequires:	apache-devel >= 2.2.0
-Requires:	apache-mod_xml2enc-devel >= 1.0.3
+BuildRequires:	apache-mod_xml2enc-devel >= 1.0.3
 BuildRequires:	file
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
