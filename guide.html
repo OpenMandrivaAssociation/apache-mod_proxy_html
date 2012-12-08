@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html lang="en"><head>
+<title>Technical guide: mod_proxy_html</title>
+<style type="text/css">
+@import url(/index.css) ;
+</style>
+<style type="text/css">
+.v3	{ color: red; }
+</style>
+</head><body>
+<div id="apache">
+<h1>mod_proxy_html: Technical Guide</h1>
+<p><a href="./">mod_proxy_html</a> Version 3.1 (April 2009).</p>
+<h2>Contents</h2>
+<ul id="toc">
+<li><a href="#url">URL Rewriting</a>
+<ul>
+<li><a href="#html">HTML Links</a></li>
+<li><a href="#event">Scripting Events</a></li>
+<li><a href="#cdata">Embedded Scripts and Stylesheets</a></li>
+</ul>
+</li>
+<li><a href="#output">Output Transformation</a>
+<ul>
+<li><a href="#fpi">FPI (Doctype)</a></li>
+<li><a href="#ml">HTML vs XHTML</a></li>
+<li><a href="#charset">Character Encoding</a></li>
+</ul>
+</li>
+<li><a href="#meta">meta http-equiv support</a></li>
+<li><a href="#misc">Other Fixups</a></li>
+<li><a href="#debug">Debugging your Configuration</a></li>
+<li><a href="#browser">Workarounds for Browser Bugs</a></li>
+</ul>
+<h2 id="url">URL Rewriting</h2>
+<p>Rewriting URLs into a proxy's address space is of course the primary
+purpose of this module.  From Version 2.0, this capability has been
+extended from rewriting HTML URLs to processing scripts and stylesheets
+that <em>may</em> contain URLs.</p>
+<p>Because the module doesn't contain parsers for javascript or CSS, this
+additional processing means we have had to introduce some heuristic parsing.
+What that means is that the parser cannot automatically distinguish between
+a URL that should be replaced and one that merely appears as text.  It's
+up to you to match the right things!  To help you do this, we have introduced
+some new features:</p>
+<ol>
+<li>The <code>ProxyHTMLExtended</code> directive.  The extended processing
+will only be activated if this is On.  The default is Off, which gives you
+the old behaviour.</li>
+<li>Regular Expression match-and-replace.  This can be used anywhere,
+but is most useful where context information can help distinguish URLs
+that should be replaced and avoid false positives.  For example,
+to rewrite URLs of CSS @import, we might define a rule<br />
+<code>ProxyHTMLURLMap	url\(http://internal.example.com([^\)]*)\)	url(http://proxy.example.com$1)	Rihe</code><br />
+This explicitly rewrites from one servername to another, and uses regexp
+memory to match a path and append it unchanged in $1, while using the
+<code>url(...)</code> context to reduce the danger of a match that shouldn't
+be rewritten.  The <b>R</b> flag invokes regexp processing for this rule;
+<b>i</b> makes the match case-insensitive; while <b>h</b> and <b>e</b>
+save processing cycles by preventing the match being applied to HTML links
+and scripting events, where it is clearly irrelevant.</li>
+</ol>
+<h3 id="html">HTML Links</h3>
+<p>HTML links are those attributes defined by the HTML 4 and XHTML 1
+DTDs as of type <strong>%URI</strong>.  For example, the <strong>href</strong>
+attribute of the <strong>a</strong> element.
+Rules are applicable provided the <b>h</b> flag is not set.
+From Version 3, the definition of links to use is delegated to the
+system administrator via the <code>ProxyHTMLLinks</code> directive.
+(the accompanying <tt>proxy_html.conf</tt> configuration file gives
+you standard HTML4 and XHTML 1, as hardwired in earlier
+mod_proxy_html versions).</p>
+<p>An HTML link always contains exactly one URL.  So whenever mod_proxy_html
+finds a matching <code>ProxyHTMLURLMap</code> rule, it will apply the
+transformation once and stop processing the attribute.  This
+can be overridden by the <code>l</code> flag, which causes processing
+a URL to continue after a rewrite.</p>
+<h3 id="event">Scripting Events</h3>
+<p>Scripting events are the contents of event attributes as defined in the
+HTML4 and XHTML1 DTDs; for example <code>onclick</code>.
+Rules are applicable provided the <b>e</b> flag is not set.
+From Version 3, the definition of events to use is
+delegated to the system administrator via the <code>ProxyHTMLEvents</code>
+directive: see <tt>proxy_html.conf</tt>.</p>
+<p>A scripting event may contain more than one URL, and will contain other
+text.  So when <code>ProxyHTMLExtended</code> is On, all applicable rules
+will be applied in order until and unless a rule with the <b>L</b> flag
+matches.  A rule may match more than once, provided the matches do not
+overlap, so a URL/pattern that appears more than once is rewritten
+every time it matches.</p>
+<h3 id="cdata">Embedded Scripts and Stylesheets</h3>
+<p>Embedded scripts and stylesheets are the contents of
+<code>&lt;script&gt;</code> and <code>&lt;style&gt;</code> elements.
+Rules are applicable provided the <b>c</b> flag is not set.</p>
+<p>A script or stylesheet may contain more than one URL, and will contain other
+text.  So when <code>ProxyHTMLExtended</code> is On, all applicable rules
+will be applied in order until and unless a rule with the <b>L</b> flag
+matches.  A rule may match more than once, provided the matches do not
+overlap, so a URL/pattern that appears more than once is rewritten
+every time it matches.</p>
+<h2 id="output">Output Transformation</h2>
+<p>mod_proxy_html uses a SAX parser.  This means that the input stream
+- and hence the output generated - will be normalised in various ways,
+even where nothing is actually rewritten.  To an HTML or XML parser,
+the document is not changed by normalisation, except as noted below.
+Exceptions to this may arise where the input stream is malformed, when
+the output of mod_proxy_html may be undefined.  These should of course
+be fixed at the backend: if mod_proxy_html doesn't work as expected,
+then neither will browsers in real life, except by coincidence.</p>
+<h3 id="fpi">FPI (Doctype)</h3>
+<p>Strictly speaking, HTML and XHTML documents are required to have a
+Formal Public Identifier (FPI), also know as a Document Type Declaration.
+This references a Document Type Definition (DTD) which defines the grammar/
+syntax to which the contents of the document must conform.</p>
+<p>The parser in mod_proxy_html loses any FPI in the input document, but
+gives you the option to insert one.  You may select either HTML or XHTML
+(see below), and if your backend is sloppy you may also want to use the
+"Legacy" keyword to make it declare documents "Transitional".  You may
+also declare a custom DTD, or (if your backend is seriously screwed
+so no DTD would be appropriate) omit it altogether.</p>
+<h3 id="ml">HTML vs XHTML</h3>
+<p>The differences between HTML 4.01 and XHTML 1.0 are essentially negligible,
+and mod_proxy_html can transform between the two.  You can safely select
+either, regardless of what the backend generates, and mod_proxy_html will
+apply the appropriate rules in generating output.  HTML saves a few bytes.</p>
+<p>If you declare a custom DTD, you should specify whether to generate
+HTML or XHTML syntax in the output.  This affects empty elements:
+HTML <b>&lt;br&gt;</b> vs XHTML <b>&lt;br /&gt;</b>.</p>
+<p>If you select standard HTML or XHTML, mod_proxy_html 3 will
+perform some additional fixups of bogus markup.  If you don't want this,
+you can enter a standard DTD using the nonstandard form of
+<code>ProxyHTMLDTD</code>, which will then be treated as unknown
+(no corrections).</p>
+<h3 id="charset">Character Encoding</h3>
+<p>The parser uses <strong>UTF-8</strong> (Unicode) internally, and
+mod_proxy_html prior to version 3 <em>always</em> generates output as UTF-8.
+This is supported by all general-purpose web software, and supports more
+character sets and languages than any other charset.</p>
+<p>The character encoding should be declared in HTTP: for example<br />
+<code>Content-Type: text/html; charset=latin1</code><br />
+mod_proxy_html has always supported this in its input, and ensured
+this happens in output.  But prior to version 2, it did not fully
+support detection (sniffing) the charset when a backend fails to
+set the HTTP Header.</p>
+<p>From version 2, mod_proxy_html will detect the encoding of its input
+as follows:</p>
+<ol>
+<li>The HTTP headers, where available, always take precedence over other
+information.</li>
+<li>If the first 2-4 bytes are an XML Byte Order Mark (BOM), this is used.</li>
+<li>If the document starts with an XML declaration
+<code>&lt;?xml .... ?&gt;</code>, this determines encoding by XML rules.</li>
+<li>If the document contains the HTML hack
+<code>&lt;meta http-equiv="Content-Type" ...&gt;</code>, any charset declared
+here is used.</li>
+<li>In the absence of any of the above indications, the HTML-over-HTTP default
+encoding <b>ISO-8859-1</b> is assumed.</li>
+<li>The parser is set to ignore invalid characters, so a malformed input
+stream will generate glitches (unexpected characters) rather than risk
+aborting a parse altogether.</li>
+</ol>
+<p>From <strong>Version 3.1</strong> the above is delegated to
+<a href="../mod_xml2enc/">mod_xml2enc</a>, which also expands charset support
+and enables you to:</p>
+<ol>
+<li>Handle any character set supported by iconv on your system, in addition
+to those supported by libxml2.</li>
+<li>Alias an unsupported charset to a supported one: for example nonstandard
+Windows codepages to ISO equivalents.</li>
+<li>Override the ISO-8859-1 Default encoding.</li>
+<li>Convert output to your choice of charset (at an additional processing cost).</li>
+</ol>
+
+<h2 id="meta">meta http-equiv support</h2>
+<p>The HTML <code>meta</code> element includes a form
+<code>&lt;meta http-equiv="Some-Header" contents="some-value"&gt;</code>
+which should notionally be converted to a real HTTP header by the webserver.
+In practice, it is more commonly supported in browsers than servers, and
+is common in constructs such as ClientPull (aka "meta refresh").
+The <code>ProxyHTMLMeta</code> directive supports the server generating
+real HTTP headers from these.  However, it does not strip them from the
+HTML (except for Content-Type, which is removed in case it contains
+conflicting charset information).</p>
+<h2 id="misc">Other Fixups</h2>
+<p>For additional minor functions of mod_proxy_html, please see the
+<code>ProxyHTMLFixups</code> and <code>ProxyHTMLStripComments</code>
+directives in the <a href="config.html">Configuration Guide</a>.</p>
+<h2 id="debug">Debugging your Configuration</h2>
+<p>From Version 2.1, mod_proxy_html supports a <code>ProxyHTMLLogVerbose</code>
+directive, to enable verbose logging at <code>LogLevel Info</code>.  This
+is designed to help with setting up your proxy configuration and
+diagnosing unexpected behaviour; it is not recommended for normal
+operation, and can be disabled altogether at compile time for extra
+performance (see the top of the source).</p>
+<p>When verbose logging is enabled, the following messages will be logged:</p>
+<ol>
+<li>In <strong>Charset Detection</strong>, it will report what charset is
+detected and how (HTTP rules, XML rules, or HTML rules).  Note that,
+regardless of verbose logging, an error or warning will be logged if an
+unsupported charset is detected or if no information can be found.</li>
+<li>When <code>ProxyHTMLMeta</code> is enabled, it logs each header/value
+pair processed.</li>
+<li>Whenever a <code>ProxyHTMLURLMap</code> rule matches and causes a
+rewrite, it is logged.  The message contains abbreviated context information:
+<strong>H</strong> denotes an HTML link matched; <strong>E</strong>
+denotes a match in a scripting event, <strong>C</strong> denotes a match
+in an inline script or stylesheet.  When the match is a regexp
+find-and-replace, it is also marked as <strong>RX</strong>.</li>
+</ol>
+<h2 id="browser">Workarounds for Browser Bugs</h2>
+<p>Because mod_proxy_html unsets the Content-Length header, it risks
+losing the performance advantage of HTTP Keep-Alive.  It therefore sets
+up HTTP Chunked Encoding when responding to HTTP/1.1 requests.  This
+enables keep-alive again for HTTP/1.1 agents.</p>
+<p>Unfortunately some buggy agents will send an HTTP/1.1 request but
+choke on an HTTP/1.1 response.  Typically you will see numbers before
+and after, and possibly in the middle of, a page.  To work around this, set the
+<code>force-response-1.0</code> environment variable in httpd.conf.
+For example,<br /><code>BrowserMatch MSIE force-response-1.0</code></p>
+</div>
+<div id="navbar"><a class="internal" href="./" title="Up">Up</a>
+*
+<a class="internal" href="/" title="WebThing Apache Centre">Home</a>
+*
+<a class="internal" href="/contact.html" title="Contact WebThing">Contact</a>
+*
+<a class="external" href="http://www.webthing.com/" title="WebThing Ltd">Web&#222;ing</a>
+*
+<a class="external" href="http://www.apache.org/" title="Apache Software Foundation">Apache</a></div></body></html>

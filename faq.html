@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html lang="en"><head>
+<title>mod_proxy_html</title>
+<style type="text/css">
+@import url(/index.css) ;
+</style>
+</head><body>
+<div id="apache">
+<h1>mod_proxy_html: Frequently Asked Questions</h1>
+<p>This answers some of the most frequently asked questions
+that aren't dealt with (or that people overlook) in the documentation
+and the apachetutor tutorial.  <span class="v3">This was written for
+Version 2, and most of the questions are moot in Version 3.</span></p>
+<h2>Questions</h2>
+<ol>
+<li><a href="#charset">Can mod_proxy_html support (charset XYZ) as input?</a></li>
+<li><a href="#iconv">Can mod_proxy_html support (charset XYZ) as output?</a></li>
+<li><a href="#script">Why does mod_proxy_html mangle my Javascript?</a></li>
+<li><a href="#attr">Why doesn't mod_proxy_html rewrite urls in [some attribute]?</a></li>
+</ol>
+<h2>Answers</h2>
+<dl>
+<dt id="charset">Can mod_proxy_html support (charset XYZ) as input?</dt>
+<dd><p>In version 2, that depends entirely on libxml2, and your charset
+is supported if and only if libxml2 supports it.</p>
+<p>In Version 3.1, charset support is much expanded provided
+<a href="../mod_xml2enc/">mod_xml2enc</a> is enabled.  It is normally
+sufficient just to load mod_xml2enc: it will be configured automatically
+if you configure mod_proxy_html using <code>ProxyHTMLEnable</code>.
+In a few cases, you may need to customise charset support further using
+mod_xml2enc's directives.</p>
+<p>Note that some servers send inconsistent and even conflicting charset
+information, and may generate unexpected results.  Setting
+<code>ProxyHTMLMeta On</code> may help resolve such cases, and will
+help diagnose problems with extra debug information in the error log.</p>
+</dd>
+<dt id="iconv">Can mod_proxy_html support (charset XYZ) as output?</dt>
+<dd><p>libxml2 uses <code>utf-8</code> internally for everything.
+Generating output with another charset is therefore an additional
+overhead, and the decision was taken to exclude any such capability
+from mod_proxy_html.  There is an easy workaround: you can transcode
+the output using another filter, such as mod_charset_lite.</p>
+<p>mod_proxy_html 3 supports output transformation to other
+charsets using <code>ProxyHTMLCharsetOut</code>.  This requires
+mod_xml2enc to be loaded.</p>
+</dd>
+<dt id="script">Why does mod_proxy_html mangle my Javascript?</dt>
+<dd><p>It doesn't.  Your javascript is simply too badly malformed,
+and libxml2's error correction isn't what you expect!
+Check it with <a href="http://valet.webthing.com/page/">a validator</a>,
+or with libxml2's <tt>xmllint --html</tt>
+(which uses the same parser as mod_proxy_html).  Here is
+<a href="/mod_publisher/parser.html">a fuller explanation</a>.</p>
+<p>The best fix for this is to remove the javascript from your markup,
+and import it from a separate <tt>.js</tt> file.  If you have an
+irredeemably broken publishing system, you may have to upgrade to
+<a href="/mod_publisher/">mod_publisher</a> or resort to a markup-blind
+filter such as <a href="/mod_line_edit/">mod_line_edit</a>,
+mod_substitute or mod_sed.</p>
+</dd>
+<dt id="attr">Why doesn't mod_proxy_html rewrite urls in [some attribute]?</dt>
+<dd><p>mod_proxy_html versions 1 and 2 are based on W3C HTML 4.01 and
+XHTML 1.0 (which are identical in terms of elements and attributes).
+It supports all links
+defined in W3C HTML, even those that have been deprecated since 1997.
+But it does <strong>NOT</strong> support proprietary pseudo-HTML "extensions"
+that have never been part of <strong>any</strong> published HTML standard.
+Of course, it's trivial to add them to the source.</p>
+<p>This has been the most commonly requested feature since mod_proxy_html 2.0
+was released in 2004.  Since everyone's requirements are different, it
+could not reasonably be satisfied with a simple one-size-fits-all fix.
+Version 3 of mod_proxy_html delegates the definition of HTML links to
+the system administrator, via the configuration file.
+<p>A sample file <tt>proxy_html.conf</tt> is provided, and defines
+standard W3C HTML/XHTML.  Note that you MUST include this (or equivalent)
+into your configuration, or no links will be rewritten!  If you need to
+support nonstandard HTML variants, follow the instructions in
+<tt>proxy_html.conf</tt>.</p>
+</dd>
+</dl>
+</div>
+<div id="navbar"><a class="internal" href="./" title="Up">Up</a>
+*
+<a class="internal" href="/" title="WebThing Apache Centre">Home</a>
+*
+<a class="internal" href="/contact.html" title="Contact WebThing">Contact</a>
+*
+<a class="external" href="http://www.webthing.com/" title="WebThing Ltd">Web&#222;ing</a>
+*
+<a class="external" href="http://www.apache.org/" title="Apache Software Foundation">Apache</a></div></body></html>
