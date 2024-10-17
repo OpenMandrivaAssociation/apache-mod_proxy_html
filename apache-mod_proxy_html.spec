@@ -11,7 +11,7 @@ Version:	3.1.2
 Release:	%mkrel 0.%{snap}.7
 Group:		System/Servers
 License:	GPL
-URL:		http://apache.webthing.com/mod_proxy_html/
+URL:		https://apache.webthing.com/mod_proxy_html/
 Source0:	mod_proxy_html-%{version}-%{snap}.tar.gz
 Source1:	http://apache.webthing.com/mod_proxy_html/config.html
 Source2:	http://apache.webthing.com/mod_proxy_html/guide.html
